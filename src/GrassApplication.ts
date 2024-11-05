@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { shaders } from "./shaders";
 
+const FILE_BASE = import.meta.env.DEV ? "" : "/Threejs-Grass";
+
 export class GrassApplication {
   private threejs = new THREE.WebGLRenderer();
   private materials: Array<THREE.ShaderMaterial> = [];
@@ -53,7 +55,9 @@ export class GrassApplication {
   }
 
   private setupGround() {
-    const diffuseTexture = new THREE.TextureLoader().load("/grid.png");
+    const diffuseTexture = new THREE.TextureLoader().load(
+      FILE_BASE + "/grid.png"
+    );
     diffuseTexture.wrapS = THREE.RepeatWrapping;
     diffuseTexture.wrapT = THREE.RepeatWrapping;
 
