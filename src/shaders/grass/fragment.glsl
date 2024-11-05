@@ -1,6 +1,8 @@
 uniform vec2 resolution;
 uniform float time;
 
+varying vec3 v_color;
+
 float inverseLerp(float v, float minValue, float maxValue) {
   return (v - minValue) / (maxValue - minValue);
 }
@@ -15,7 +17,7 @@ float saturate(float x) {
 }
 
 void main() {
-  vec3 color = vec3(0.0);
+  vec3 color = v_color;
 
   gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }

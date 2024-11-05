@@ -4,7 +4,7 @@ import { shaders } from "./shaders";
 
 const FILE_BASE = import.meta.env.DEV ? "" : "/Threejs-Grass";
 
-const GRASS_INSTANCES = 20;
+const GRASS_INSTANCES = 250;
 const GRASS_SEGMENTS = 6;
 const GRASS_VERTICES = (GRASS_SEGMENTS + 1) * 2;
 const GRASS_PATCH_SIZE = 5;
