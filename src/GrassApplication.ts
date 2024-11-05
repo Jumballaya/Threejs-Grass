@@ -4,6 +4,13 @@ import { shaders } from "./shaders";
 
 const FILE_BASE = import.meta.env.DEV ? "" : "/Threejs-Grass";
 
+const GRASS_INSTANCES = 1;
+const GRASS_SEGMENTS = 6;
+const GRASS_VERTICES = (GRASS_SEGMENTS + 1) * 2;
+const GRASS_PATCH_SIZE = 10;
+const GRASS_WIDTH = 0.25;
+const GRASS_HEIGHT = 2;
+
 export class GrassApplication {
   private threejs = new THREE.WebGLRenderer();
   private materials: Array<THREE.ShaderMaterial> = [];
@@ -12,6 +19,8 @@ export class GrassApplication {
   private cameraController: OrbitControls;
   private scene = new THREE.Scene();
   private sky!: THREE.Mesh;
+  private grassGeometry!: THREE.InstancedBufferGeometry;
+  private grassMesh!: THREE.Mesh;
 
   private totalTime = 0;
 
@@ -57,6 +66,7 @@ export class GrassApplication {
 
     this.setupGround();
     this.setupSky();
+    this.setupGrass();
     this.onWindowResize();
   }
 
@@ -104,10 +114,69 @@ export class GrassApplication {
     this.materials.push(mat);
   }
 
+  private setupGrass() {
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        grassParams: {
+          value: new THREE.Vector4(
+            GRASS_SEGMENTS,
+            GRASS_VERTICES,
+            GRASS_WIDTH,
+            GRASS_HEIGHT
+          ),
+        },
+        time: { value: 0 },
+        resolution: { value: new THREE.Vector2(1, 1) },
+      },
+      vertexShader: shaders.grass.vertex,
+      fragmentShader: shaders.grass.fragment,
+      side: THREE.FrontSide,
+    });
+    this.grassGeometry = this.createGeometry();
+    this.grassMesh = new THREE.Mesh(this.grassGeometry, mat);
+    this.grassMesh.position.set(0, 0, 0);
+    this.scene.add(this.grassMesh);
+
+    this.materials.push(mat);
+  }
+
   private setupResizer() {
     window.addEventListener("resize", () => {
       this.onWindowResize();
     });
+  }
+
+  private createGeometry(): THREE.InstancedBufferGeometry {
+    const indices: number[] = [];
+    for (let i = 0; i < GRASS_SEGMENTS; i++) {
+      const vi = i * 2;
+      indices[i * 12 + 0] = vi + 0;
+      indices[i * 12 + 1] = vi + 1;
+      indices[i * 12 + 2] = vi + 2;
+
+      indices[i * 12 + 3] = vi + 2;
+      indices[i * 12 + 4] = vi + 1;
+      indices[i * 12 + 5] = vi + 3;
+
+      const fi = GRASS_VERTICES + vi;
+      indices[i * 12 + 6] = fi + 2;
+      indices[i * 12 + 7] = fi + 1;
+      indices[i * 12 + 8] = fi + 0;
+
+      indices[i * 12 + 9] = fi + 3;
+      indices[i * 12 + 10] = fi + 1;
+      indices[i * 12 + 11] = fi + 2;
+    }
+
+    const geo = new THREE.InstancedBufferGeometry();
+    geo.instanceCount = GRASS_INSTANCES;
+    geo.setIndex(indices);
+    geo.boundingSphere = new THREE.Sphere(
+      new THREE.Vector3(0, 0, 0),
+      1 + GRASS_PATCH_SIZE * 2
+    );
+
+    return geo;
   }
 
   private onWindowResize() {
