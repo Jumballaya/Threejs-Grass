@@ -4,10 +4,10 @@ import { shaders } from "./shaders";
 
 const FILE_BASE = import.meta.env.DEV ? "" : "/Threejs-Grass";
 
-const GRASS_INSTANCES = 250;
+const GRASS_PATCH_SIZE = 5;
+const GRASS_INSTANCES = 25 * GRASS_PATCH_SIZE * GRASS_PATCH_SIZE;
 const GRASS_SEGMENTS = 6;
 const GRASS_VERTICES = (GRASS_SEGMENTS + 1) * 2;
-const GRASS_PATCH_SIZE = 5;
 const GRASS_WIDTH = 0.25;
 const GRASS_HEIGHT = 2;
 
@@ -90,7 +90,7 @@ export class GrassApplication {
     const geo = new THREE.PlaneGeometry(1, 1, 512, 512);
     const plane = new THREE.Mesh(geo, mat);
     plane.rotateX(-Math.PI / 2);
-    plane.scale.setScalar(10);
+    plane.scale.setScalar(GRASS_PATCH_SIZE * 2);
     this.scene.add(plane);
     this.materials.push(mat);
   }
