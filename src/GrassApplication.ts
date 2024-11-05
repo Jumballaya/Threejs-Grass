@@ -9,12 +9,15 @@ export class GrassApplication {
   private materials: Array<THREE.ShaderMaterial> = [];
 
   private camera: THREE.PerspectiveCamera;
+  private cameraController: OrbitControls;
   private scene = new THREE.Scene();
   private sky!: THREE.Mesh;
 
   private totalTime = 0;
 
   constructor() {
+    document.body.appendChild(this.threejs.domElement);
+
     this.scene.background = new THREE.Color(0.7, 0.8, 1.0);
 
     const fov = 60;
@@ -22,8 +25,10 @@ export class GrassApplication {
     const near = 0.1;
     const far = 10000.0;
     this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-
-    document.body.appendChild(this.threejs.domElement);
+    this.cameraController = new OrbitControls(
+      this.camera,
+      this.threejs.domElement
+    );
 
     this.setupProject();
     this.setupResizer();
@@ -34,6 +39,7 @@ export class GrassApplication {
     for (let m of this.materials) {
       m.uniforms.time.value = this.totalTime;
     }
+    this.cameraController.update(deltaTime / 1000);
     this.threejs.render(this.scene, this.camera);
   }
 
@@ -45,9 +51,9 @@ export class GrassApplication {
     light.lookAt(0, 0, 0);
     this.scene.add(light);
 
-    const controls = new OrbitControls(this.camera, this.threejs.domElement);
-    controls.target.set(0, 0, 0);
-    controls.update();
+    this.cameraController.target.set(0, 0, 0);
+    this.cameraController.update();
+    this.cameraController.enableDamping = true;
 
     this.setupGround();
     this.setupSky();
