@@ -1,4 +1,3 @@
-varying vec2 vUvs;
 uniform vec2 resolution;
 uniform float time;
 
@@ -16,8 +15,6 @@ float saturate(float x) {
 }
 
 void main() {
-  vec2 pixelCoords = (vUvs - 0.5) * resolution;
-
   vec3 color = vec3(0.0);
 
   gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);

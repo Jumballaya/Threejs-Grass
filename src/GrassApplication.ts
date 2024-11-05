@@ -4,10 +4,10 @@ import { shaders } from "./shaders";
 
 const FILE_BASE = import.meta.env.DEV ? "" : "/Threejs-Grass";
 
-const GRASS_INSTANCES = 1;
+const GRASS_INSTANCES = 20;
 const GRASS_SEGMENTS = 6;
 const GRASS_VERTICES = (GRASS_SEGMENTS + 1) * 2;
-const GRASS_PATCH_SIZE = 10;
+const GRASS_PATCH_SIZE = 5;
 const GRASS_WIDTH = 0.25;
 const GRASS_HEIGHT = 2;
 
@@ -120,7 +120,7 @@ export class GrassApplication {
         grassParams: {
           value: new THREE.Vector4(
             GRASS_SEGMENTS,
-            GRASS_VERTICES,
+            GRASS_PATCH_SIZE,
             GRASS_WIDTH,
             GRASS_HEIGHT
           ),
