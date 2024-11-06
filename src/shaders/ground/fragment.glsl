@@ -2,6 +2,8 @@ varying vec3 vWorldPosition;
 varying vec3 vWorldNormal;
 varying vec2 vUv;
 
+varying vec3 v_color;
+
 uniform sampler2D diffuseTexture;
 
 float inverseLerp(float v, float minValue, float maxValue) {
@@ -31,6 +33,8 @@ void main() {
 	gridcolor = mix(gridcolor, vec3(0.00625), grid1);
 
   vec3 color = gridcolor;
+
+  color = v_color;
 
   gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }

@@ -2,9 +2,11 @@ varying vec3 vWorldPosition;
 varying vec3 vWorldNormal;
 varying vec2 vUv;
 
-uniform sampler2D displacementTexture;
-uniform float patchSize;
+varying vec3 v_color;
 
+uniform float u_tile_id;
+uniform sampler2DArray tileDataTexture;
+uniform float patchSize;
 
 vec3 hash(vec3 p) {
 	p = vec3(dot(p, vec3(127.1, 311.7, 74.7)),
@@ -29,20 +31,22 @@ float noise( in vec3 p ) {
                         dot( hash( i + vec3(1.0,1.0,1.0) ), f - vec3(1.0,1.0,1.0) ), u.x), u.y), u.z );
 }
 
-vec3 terrainHeight(vec3 worldPos) {
-  return vec3(worldPos.x, noise(worldPos * 0.02) * 10.0, worldPos.z);
+
+vec3 terrainHeight(vec3 worldPos, vec4 terrain) {
+  return vec3(worldPos.x, terrain.g * 10.0, worldPos.z);
 }
 
 void main() {
+  vec4 terrain = texture(tileDataTexture, vec3(uv, u_tile_id));
   vec4 localSpacePosition = vec4(position, 1.0);
   vec4 worldPosition = modelMatrix * localSpacePosition;
-
-  vec4 terrain = texture(displacementTexture, uv);
-  worldPosition.xyz +=  vec3(0.0, terrain.r * patchSize / 2.0, 0.0);
+  worldPosition.xyz = terrainHeight(worldPosition.xyz, terrain);
 
   vWorldPosition = worldPosition.xyz;
   vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
   vUv = uv;
 
   gl_Position = projectionMatrix * viewMatrix * worldPosition;
+
+  v_color = terrain.rgb;
 }

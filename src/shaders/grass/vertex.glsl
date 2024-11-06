@@ -7,9 +7,9 @@ varying vec3 v_normal;
 varying vec3 v_worldPosition;
 
 uniform bool u_textured;
+uniform float u_tile_id;
 uniform float time;
-uniform sampler2D tileDataTexture;
-uniform sampler2D displacementTexture;
+uniform sampler2DArray tileDataTexture;
 
 const vec3 BASE_COLOR = vec3(0.1, 0.4, 0.04);
 const vec3 TIP_COLOR = vec3(0.5, 0.7, 0.3);
@@ -63,8 +63,8 @@ float noise( in vec3 p ) {
                         dot( hash( i + vec3(1.0,1.0,1.0) ), f - vec3(1.0,1.0,1.0) ), u.x), u.y), u.z );
 }
 
-vec3 terrainHeight(vec3 worldPos) {
-  return vec3(worldPos.x, noise(worldPos * 0.02) * 10.0, worldPos.z);
+vec3 terrainHeight(vec3 worldPos, vec4 terrain) {
+  return vec3(worldPos.x, terrain.g * 10.0, worldPos.z);
 }
 
 float inverseLerp(float v, float minValue, float maxValue) {
@@ -133,13 +133,12 @@ void main() {
   vec2 hashedInstanceID = hash21(float(gl_InstanceID)) * 2.0 - 1.0;
   vec3 grassOffset = vec3(hashedInstanceID.x, 0.0, hashedInstanceID.y) * GRASS_PATCH_SIZE;
 
-  vec3 grassBladeWorldPos = (modelMatrix * vec4(grassOffset, 1.0)).xyz;
+  vec3 grassBladeWorldPos = (vec4(grassOffset, 1.0)).xyz;
   vec3 hashVal = hash(grassBladeWorldPos);
 
   vec2 uv = (vec2(-grassBladeWorldPos.x, grassBladeWorldPos.z) / GRASS_PATCH_SIZE) * 0.5 + 0.5;
-
-  vec4 terrain = texture(displacementTexture, uv);
-  grassOffset.y = terrain.r  * (GRASS_PATCH_SIZE / 2.0);
+  vec4 tileData = texture2D(tileDataTexture, vec3(uv, u_tile_id));
+  grassOffset = terrainHeight(grassOffset, tileData);
 
   float grassType = saturate(hashVal.z);
   if (grassType < 0.5) {
@@ -153,9 +152,8 @@ void main() {
   float angle = remap(hashVal.x, -1.0, 1.0, -PI, PI);
 
   // TILE DATA
-  vec4 tileData = texture2D(tileDataTexture, uv);
   float stiffness = 1.0 - tileData.r * 0.85;
-  float tileGrassHeight = tileData.r * 1.05;
+  float tileGrassHeight = (1.0 - tileData.r) * 1.1;
 
   // Figue out vertex id
   int vertFB_ID = gl_VertexID % (GRASS_VERTICES * 2);
