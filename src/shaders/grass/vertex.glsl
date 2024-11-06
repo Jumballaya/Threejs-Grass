@@ -7,6 +7,7 @@ varying vec3 v_normal;
 varying vec3 v_worldPosition;
 
 uniform float time;
+uniform sampler2D tileDataTexture;
 
 const vec3 BASE_COLOR = vec3(0.1, 0.4, 0.04);
 const vec3 TIP_COLOR = vec3(0.5, 0.7, 0.3);
@@ -58,6 +59,10 @@ float noise( in vec3 p ) {
                         dot( hash( i + vec3(1.0,0.0,1.0) ), f - vec3(1.0,0.0,1.0) ), u.x),
                    mix( dot( hash( i + vec3(0.0,1.0,1.0) ), f - vec3(0.0,1.0,1.0) ), 
                         dot( hash( i + vec3(1.0,1.0,1.0) ), f - vec3(1.0,1.0,1.0) ), u.x), u.y), u.z );
+}
+
+vec3 terrainHeight(vec3 worldPos) {
+  return vec3(worldPos.x, noise(worldPos * 0.02) * 10.0, worldPos.z);
 }
 
 float inverseLerp(float v, float minValue, float maxValue) {
@@ -126,12 +131,19 @@ void main() {
   vec2 hashedInstanceID = hash21(float(gl_InstanceID)) * 2.0 - 1.0;
   vec3 grassOffset = vec3(hashedInstanceID.x, 0.0, hashedInstanceID.y) * GRASS_PATCH_SIZE;
 
+  grassOffset = terrainHeight(grassOffset);
+
   vec3 grassBladeWorldPos = (modelMatrix * vec4(grassOffset, 1.0)).xyz;
   vec3 hashVal = hash(grassBladeWorldPos);
 
+  // Grass Rotation
   const float PI = 3.141596;
   float angle = remap(hashVal.x, -1.0, 1.0, -PI, PI);
 
+  // TILE DATA
+  vec4 tileData = texture2D(tileDataTexture, (vec2(-grassBladeWorldPos.x, grassBladeWorldPos.z) / GRASS_PATCH_SIZE) * 0.5 + 0.5);
+  float stiffness = 1.0 - tileData.r * 0.85;
+  float tileGrassHeight = tileData.r * 1.05;
 
   // Figue out vertex id
   int vertFB_ID = gl_VertexID % (GRASS_VERTICES * 2);
@@ -145,19 +157,20 @@ void main() {
   float heightPercent = float(vertID - xTest) / (float(GRASS_SEGMENTS) * 2.0);
 
   float width = GRASS_WIDTH * ease_out(1.0 - heightPercent, 2.0);
-  float height = GRASS_HEIGHT;
+  float height = GRASS_HEIGHT - (tileGrassHeight * GRASS_HEIGHT);
 
   // calculate the vertex position
   float x = (xSide - 0.5) * width;
   float y = heightPercent * height;
   float z = 0.0;
 
-  // Bezier curve for bend
-  // float randomLeanAnim = sin(time * 2.0 + hashVal.y) * 0.025;
+  // Wind effect
   float windStrength = noise(vec3(grassBladeWorldPos.xz * 0.05, 0.0) + time);
   float windAngle = 0.0;
   vec3 windAxis = vec3(cos(windAngle), 0.0, sin(windAngle));
-  float windLeanAngle = windStrength * 1.25 * heightPercent;
+  float windLeanAngle = windStrength * 1.25 * heightPercent * stiffness;
+
+  // Bezier curve for bend
   float randomLeanAnim = noise(vec3(grassBladeWorldPos.xz, time * 4.0)) * (windStrength * 0.5 + 0.125);
   float leanFactor = remap(hashVal.y, -1.0, 1.0, 0.0, 0.45) + randomLeanAnim;
 
@@ -185,7 +198,17 @@ void main() {
   grassLocalNormal = mix(grassLocalNormal, vec3(0.0, 1.0, 0.0), distanceBlend * 0.5);
   grassLocalNormal = normalize(grassLocalNormal);
 
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(grassLocalPosition, 1.0);
+  // Viewspace thickening
+  vec4 mvPosition = modelViewMatrix * vec4(grassLocalPosition, 1.0);
+  vec3 viewDir = normalize(cameraPosition - grassBladeWorldPos);
+  vec3 grassFaceNormal = (grassMat * vec3(0.0, 0.0, -zSide));
+  float viewDotNormal = saturate(dot(grassFaceNormal, viewDir));
+  float viewspaceThickenFactor = ease_out(1.0 - viewDotNormal, 4.0) * smoothstep(0.0, 0.2, viewDotNormal);
+
+  mvPosition.x += viewspaceThickenFactor * (xSide - 0.5) * width * 0.5 * -zSide;
+
+  gl_Position = projectionMatrix * mvPosition;
+  gl_Position.w = tileGrassHeight > 0.95 ? 0.0 : gl_Position.w;
 
   vec3 c1 = mix(BASE_COLOR, TIP_COLOR, heightPercent);
   vec3 c2 = mix(vec3(0.4, 0.4, 0.2), vec3(0.78, 0.77, 0.46), heightPercent);
@@ -194,5 +217,5 @@ void main() {
   v_normal = normalize(modelMatrix * vec4(grassLocalNormal, 0.0)).xyz;
   v_worldPosition = (modelMatrix * vec4(grassLocalPosition, 1.0)).xyz;
 
-  v_grassData = vec4(x, 0.0, 0.0, 0.0);
+  v_grassData = vec4(x, heightPercent, 0.0, 0.0);
 }

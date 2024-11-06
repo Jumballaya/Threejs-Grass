@@ -4,11 +4,11 @@ import { shaders } from "./shaders";
 
 const FILE_BASE = import.meta.env.DEV ? "" : "/Threejs-Grass";
 
-const GRASS_PATCH_SIZE = 5;
-const GRASS_INSTANCES = 25 * GRASS_PATCH_SIZE * GRASS_PATCH_SIZE;
-const GRASS_SEGMENTS = 6;
+const GRASS_PATCH_SIZE = 16;
+const GRASS_INSTANCES = 50 * GRASS_PATCH_SIZE * GRASS_PATCH_SIZE;
+const GRASS_SEGMENTS = 3;
 const GRASS_VERTICES = (GRASS_SEGMENTS + 1) * 2;
-const GRASS_WIDTH = 0.25;
+const GRASS_WIDTH = 0.125;
 const GRASS_HEIGHT = 2;
 
 export class GrassApplication {
@@ -90,7 +90,7 @@ export class GrassApplication {
     const geo = new THREE.PlaneGeometry(1, 1, 512, 512);
     const plane = new THREE.Mesh(geo, mat);
     plane.rotateX(-Math.PI / 2);
-    plane.scale.setScalar(GRASS_PATCH_SIZE * 2);
+    plane.scale.setScalar(500);
     this.scene.add(plane);
     this.materials.push(mat);
   }
@@ -115,6 +115,9 @@ export class GrassApplication {
   }
 
   private setupGrass() {
+    const tileDataTexture = new THREE.TextureLoader().load(
+      FILE_BASE + "/grass_data.jpg"
+    );
     const mat = new THREE.ShaderMaterial({
       uniforms: {
         grassParams: {
@@ -127,6 +130,7 @@ export class GrassApplication {
         },
         time: { value: 0 },
         resolution: { value: new THREE.Vector2(1, 1) },
+        // tileDataTexture: { value: tileDataTexture },
       },
       vertexShader: shaders.grass.vertex,
       fragmentShader: shaders.grass.fragment,

@@ -19,6 +19,15 @@ float saturate(float x) {
   return clamp(x, 0.0, 1.0);
 }
 
+vec3 phongSpecular(vec3 normal, vec3 viewDir, vec3 lightDir) {
+  float dotNL = saturate(dot(normal, lightDir));
+  vec3 r = normalize(reflect(-lightDir, normal));
+  float phongValue = max(0.0, dot(viewDir, r));
+  phongValue = pow(phongValue, 32.0);
+  vec3 specular = dotNL * vec3(phongValue);
+  return specular;
+}
+
 vec3 lambertLight(vec3 normal, vec3 viewDir, vec3 lightDir, vec3 lightColor) {
   float wrap = 0.5;
   float dotNL = saturate((dot(normal, lightDir) + wrap) / (1.0 + wrap));
@@ -48,7 +57,13 @@ void main() {
   vec3 lightColor = vec3(1.0);
   vec3 diffuseLighting = lambertLight(normal, viewDir, lightDir, lightColor);
 
-  vec3 lighting = diffuseLighting * 0.5 + ambientLighting;
+  // Specular lighting
+  vec3 specular = phongSpecular(normal, viewDir, lightDir);
+
+  // Fake AO
+  float ao = remap(pow(v_grassData.y, 2.0), 0.0, 1.0, 0.125, 1.0);
+
+  vec3 lighting = (ao * (diffuseLighting * 0.5 + ambientLighting)) + 2.0 * specular;
 
   vec3 color = baseColor * lighting;
 
