@@ -88,6 +88,8 @@ export class TerrainTile {
       tileDataTexture: { value: tileDataTexture },
       patchSize: { value: this.settings.patchSize },
       u_tile_id: { value: 0 },
+      u_camera_origin: { value: new THREE.Vector3(0, 0, 0) },
+      u_camera_direction: { value: new THREE.Vector3(0, 0, 0) },
     };
 
     const mat = new THREE.ShaderMaterial({
@@ -125,6 +127,8 @@ export class TerrainTile {
       tileDataTexture: { value: tileDataTexture },
       u_textured: { value: false },
       u_tile_id: { value: 0 },
+      u_camera_origin: { value: new THREE.Vector3(0, 0, 0) },
+      u_camera_direction: { value: new THREE.Vector3(0, 0, 0) },
     };
 
     const mat = new THREE.ShaderMaterial({
