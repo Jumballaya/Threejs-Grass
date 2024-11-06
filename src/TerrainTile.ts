@@ -71,6 +71,11 @@ export class TerrainTile {
     this.grassMaterial.uniforms.u_tile_id.value = this.terrainId;
   }
 
+  public set visible(v: boolean) {
+    this.terrainMesh.visible = v;
+    this.grassMesh.visible = v;
+  }
+
   private setupGround(
     tileDataTexture: THREE.DataArrayTexture,
     scene: THREE.Scene

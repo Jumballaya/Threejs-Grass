@@ -44,6 +44,7 @@ export class GrassApplication {
       },
       Array.from(new Array(64)).map(
         (_, i) => `/tile_data/tile_data_${i + 1}.jpg`
+        // (_, i) => `/tile_data2/image_data_${i + 1}.jpg`
       )
     );
 

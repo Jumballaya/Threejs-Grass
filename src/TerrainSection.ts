@@ -40,6 +40,14 @@ export class TerrainSection {
     this.listeners.onLoad = handler;
   }
 
+  public enable(id: number) {
+    this.tiles[id].visible = true;
+  }
+
+  public disable(id: number) {
+    this.tiles[id].visible = false;
+  }
+
   private generateDataTexture(files: string[]) {
     this.tileData.loadAtlas(
       "tile-data",
