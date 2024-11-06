@@ -8,34 +8,6 @@ uniform float u_tile_id;
 uniform sampler2DArray tileDataTexture;
 uniform float patchSize;
 
-vec3 hash(vec3 p) {
-	p = vec3(dot(p, vec3(127.1, 311.7, 74.7)),
-    dot(p, vec3(269.5, 183.3, 246.1)),
-    dot(p, vec3(113.5, 271.9, 124.6)));
-	return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
-}
-
-float noise( in vec3 p ) {
-  vec3 i = floor( p );
-  vec3 f = fract( p );
-	
-	vec3 u = f*f*(3.0-2.0*f);
-
-  return mix( mix( mix( dot( hash( i + vec3(0.0,0.0,0.0) ), f - vec3(0.0,0.0,0.0) ), 
-                        dot( hash( i + vec3(1.0,0.0,0.0) ), f - vec3(1.0,0.0,0.0) ), u.x),
-                   mix( dot( hash( i + vec3(0.0,1.0,0.0) ), f - vec3(0.0,1.0,0.0) ), 
-                        dot( hash( i + vec3(1.0,1.0,0.0) ), f - vec3(1.0,1.0,0.0) ), u.x), u.y),
-              mix( mix( dot( hash( i + vec3(0.0,0.0,1.0) ), f - vec3(0.0,0.0,1.0) ), 
-                        dot( hash( i + vec3(1.0,0.0,1.0) ), f - vec3(1.0,0.0,1.0) ), u.x),
-                   mix( dot( hash( i + vec3(0.0,1.0,1.0) ), f - vec3(0.0,1.0,1.0) ), 
-                        dot( hash( i + vec3(1.0,1.0,1.0) ), f - vec3(1.0,1.0,1.0) ), u.x), u.y), u.z );
-}
-
-
-vec3 terrainHeight(vec3 worldPos, vec4 terrain) {
-  return vec3(worldPos.x, terrain.g * 10.0, worldPos.z);
-}
-
 void main() {
   vec4 terrain = texture(tileDataTexture, vec3(uv, u_tile_id));
   vec4 localSpacePosition = vec4(position, 1.0);

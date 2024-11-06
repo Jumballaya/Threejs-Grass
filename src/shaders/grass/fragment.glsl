@@ -10,42 +10,6 @@ varying vec3 v_color;
 varying vec3 v_normal;
 varying vec4 v_grassData; // [x pos, height percent, xSide, grass type]
 
-float inverseLerp(float v, float minValue, float maxValue) {
-  return (v - minValue) / (maxValue - minValue);
-}
-
-float remap(float v, float inMin, float inMax, float outMin, float outMax) {
-  float t = inverseLerp(v, inMin, inMax);
-  return mix(outMin, outMax, t);
-}
-
-float saturate(float x) {
-  return clamp(x, 0.0, 1.0);
-}
-
-vec3 phongSpecular(vec3 normal, vec3 viewDir, vec3 lightDir) {
-  float dotNL = saturate(dot(normal, lightDir));
-  vec3 r = normalize(reflect(-lightDir, normal));
-  float phongValue = max(0.0, dot(viewDir, r));
-  phongValue = pow(phongValue, 32.0);
-  vec3 specular = dotNL * vec3(phongValue);
-  return specular;
-}
-
-vec3 lambertLight(vec3 normal, vec3 viewDir, vec3 lightDir, vec3 lightColor) {
-  float wrap = 0.5;
-  float dotNL = saturate((dot(normal, lightDir) + wrap) / (1.0 + wrap));
-  vec3 lighting = vec3(dotNL);
-  float backLight = saturate((dot(viewDir, -lightDir) + wrap) / (1.0 + wrap));
-  vec3 scatter = vec3(pow(backLight, 2.0));
-  lighting += scatter;
-  return lighting * lightColor;
-}
-
-vec3 hemiLight(vec3 normal, vec3 groundColor, vec3 skyColor) {
-  return mix(groundColor, skyColor, 0.5 * normal.y + 0.5);
-}
-
 void main() {
 
   vec2 uv = v_grassData.zy;

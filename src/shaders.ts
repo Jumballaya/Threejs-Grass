@@ -5,17 +5,19 @@ import groundFragment from "./shaders/ground/fragment.glsl?raw";
 import grassVertex from "./shaders/grass/vertex.glsl?raw";
 import grassFragment from "./shaders/grass/fragment.glsl?raw";
 
+import commonShader from "./shaders/common.glsl?raw";
+
 export const shaders: Record<string, { vertex: string; fragment: string }> = {
   sky: {
-    vertex: skyVertex,
-    fragment: skyFragment,
+    vertex: commonShader + skyVertex,
+    fragment: commonShader + skyFragment,
   },
   grass: {
-    vertex: grassVertex,
-    fragment: grassFragment,
+    vertex: commonShader + grassVertex,
+    fragment: commonShader + grassFragment,
   },
   ground: {
-    vertex: groundVertex,
-    fragment: groundFragment,
+    vertex: commonShader + groundVertex,
+    fragment: commonShader + groundFragment,
   },
 };

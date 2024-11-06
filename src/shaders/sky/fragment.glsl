@@ -9,10 +9,6 @@ vec3 COLOR_BRIGHT_BLUE = vec3(0.01, 0.2, 1.0);
 vec3 COLOR_LIGHT_RED = vec3(0.85, 0.28, 0.28);
 vec3 COLOR_DARK_YELLOW = vec3(0.25, 0.25, 0.0625);
 
-float saturate(float x) {
-  return clamp(x, 0.0, 1.0);
-}
-
 void main() {
   vec2 uv = gl_FragCoord.xy / resolution.xy;
   vec3 viewDir = normalize(cameraPosition - vWorldPosition);
