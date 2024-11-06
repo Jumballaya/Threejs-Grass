@@ -34,7 +34,6 @@ void main() {
 
   vec3 color = gridcolor;
 
-  color = v_color;
 
   gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }

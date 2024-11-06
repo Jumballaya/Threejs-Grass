@@ -1,10 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { shaders } from "./shaders";
-import { TextureAtlas } from "./TextureAtlas";
-import { TerrainTile } from "./TerrainTile";
-
-const FILE_BASE = import.meta.env.DEV ? "" : "/Threejs-Grass";
+import { TerrainSection } from "./TerrainSection";
 
 export class GrassApplication {
   private threejs = new THREE.WebGLRenderer();
@@ -14,8 +11,8 @@ export class GrassApplication {
   private cameraController: OrbitControls;
   private scene = new THREE.Scene();
   private sky!: THREE.Mesh;
-  private grassGeometry!: THREE.InstancedBufferGeometry;
-  private grassMesh!: THREE.Mesh;
+
+  private terrain: TerrainSection;
 
   private totalTime = 0;
 
@@ -33,6 +30,26 @@ export class GrassApplication {
       this.camera,
       this.threejs.domElement
     );
+
+    this.terrain = new TerrainSection(
+      this.scene,
+      8,
+      8,
+      {
+        patchSize: 10,
+        grassDensity: 50,
+        segments: 4,
+        width: 0.25,
+        height: 4,
+      },
+      Array.from(new Array(64)).map(
+        (_, i) => `/tile_data/tile_data_${i + 1}.jpg`
+      )
+    );
+
+    this.terrain.onLoad = () => {
+      this.materials.push(...this.terrain.materials);
+    };
 
     this.setupProject();
     this.setupResizer();
@@ -58,60 +75,6 @@ export class GrassApplication {
     this.cameraController.target.set(0, 0, 0);
     this.cameraController.update();
     this.cameraController.enableDamping = true;
-
-    const tileDataTexture = new TextureAtlas();
-    tileDataTexture.loadAtlas("tile-data", [
-      FILE_BASE + "/tile_data/tile_data_1.jpg",
-      FILE_BASE + "/tile_data/tile_data_2.jpg",
-      FILE_BASE + "/tile_data/tile_data_3.jpg",
-      FILE_BASE + "/tile_data/tile_data_4.jpg",
-    ]);
-
-    tileDataTexture.onLoad = () => {
-      const atlas = tileDataTexture.Info["tile-data"]!.atlas!;
-      const terrainTile1 = new TerrainTile(this.scene, atlas, {
-        patchSize: 10,
-        grassDensity: 50,
-        width: 0.125,
-        height: 4,
-      });
-      terrainTile1.id = 0;
-      terrainTile1.position = new THREE.Vector3(0, 0, 0);
-
-      const terrainTile2 = new TerrainTile(this.scene, atlas, {
-        patchSize: 10,
-        grassDensity: 50,
-        width: 0.125,
-        height: 4,
-      });
-      terrainTile2.id = 1;
-      terrainTile2.position = new THREE.Vector3(-20, 0, 0);
-
-      const terrainTile3 = new TerrainTile(this.scene, atlas, {
-        patchSize: 10,
-        grassDensity: 50,
-        width: 0.125,
-        height: 4,
-      });
-      terrainTile3.id = 2;
-      terrainTile3.position = new THREE.Vector3(0, 0, -20);
-
-      const terrainTile4 = new TerrainTile(this.scene, atlas, {
-        patchSize: 10,
-        grassDensity: 50,
-        width: 0.125,
-        height: 4,
-      });
-      terrainTile4.id = 3;
-      terrainTile4.position = new THREE.Vector3(-20, 0, -20);
-
-      this.materials = [
-        ...terrainTile1.materials,
-        ...terrainTile2.materials,
-        ...terrainTile3.materials,
-        ...terrainTile4.materials,
-      ];
-    };
 
     this.setupSky();
     this.onWindowResize();

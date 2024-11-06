@@ -139,6 +139,7 @@ void main() {
   vec2 uv = (vec2(-grassBladeWorldPos.x, grassBladeWorldPos.z) / GRASS_PATCH_SIZE) * 0.5 + 0.5;
   vec4 tileData = texture2D(tileDataTexture, vec3(uv, u_tile_id));
   grassOffset = terrainHeight(grassOffset, tileData);
+  grassBladeWorldPos = (vec4(grassOffset, 1.0)).xyz;
 
   float grassType = saturate(hashVal.z);
   if (grassType < 0.5) {
@@ -222,7 +223,7 @@ void main() {
   mvPosition.x += viewspaceThickenFactor * (xSide - 0.5) * width * 0.5 * -zSide;
 
   gl_Position = projectionMatrix * mvPosition;
-  gl_Position.w = tileGrassHeight > 0.95 ? 0.0 : gl_Position.w;
+  gl_Position.w = tileGrassHeight > 0.9 ? 0.0 : gl_Position.w;
 
   vec3 c1 = mix(BASE_COLOR, TIP_COLOR, heightPercent);
   vec3 c2 = mix(vec3(0.4, 0.4, 0.2), vec3(0.78, 0.77, 0.46), heightPercent);

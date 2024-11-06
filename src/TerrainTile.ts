@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { shaders } from "./shaders";
 
-type TerrainTileSettings = {
+export type TerrainTileSettings = {
   patchSize: number;
   grassDensity: number; // grass blade per square meter
   segments: number;
@@ -96,7 +96,7 @@ export class TerrainTile {
       fragmentShader: shaders.ground.fragment,
     });
 
-    const geo = new THREE.PlaneGeometry(1, 1, 512, 512);
+    const geo = new THREE.PlaneGeometry(1, 1, 8, 8);
     const terrain = new THREE.Mesh(geo, mat);
     terrain.rotateX(-Math.PI / 2);
     terrain.rotateZ(Math.PI);
