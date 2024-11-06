@@ -1,12 +1,13 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { shaders } from "./shaders";
+import { TextureAtlas } from "./TextureAtlas";
 
 const FILE_BASE = import.meta.env.DEV ? "" : "/Threejs-Grass";
 
-const GRASS_PATCH_SIZE = 16;
+const GRASS_PATCH_SIZE = 50;
 const GRASS_INSTANCES = 50 * GRASS_PATCH_SIZE * GRASS_PATCH_SIZE;
-const GRASS_SEGMENTS = 3;
+const GRASS_SEGMENTS = 6;
 const GRASS_VERTICES = (GRASS_SEGMENTS + 1) * 2;
 const GRASS_WIDTH = 0.125;
 const GRASS_HEIGHT = 2;
@@ -74,6 +75,9 @@ export class GrassApplication {
     const diffuseTexture = new THREE.TextureLoader().load(
       FILE_BASE + "/grid.png"
     );
+    const displacementTexture = new THREE.TextureLoader().load(
+      FILE_BASE + "/grass_data.jpg"
+    );
     diffuseTexture.wrapS = THREE.RepeatWrapping;
     diffuseTexture.wrapT = THREE.RepeatWrapping;
 
@@ -82,6 +86,8 @@ export class GrassApplication {
         time: { value: 0 },
         resolution: { value: new THREE.Vector2(1, 1) },
         diffuseTexture: { value: diffuseTexture },
+        displacementTexture: { value: displacementTexture },
+        patchSize: { value: GRASS_PATCH_SIZE },
       },
       vertexShader: shaders.ground.vertex,
       fragmentShader: shaders.ground.fragment,
@@ -90,7 +96,8 @@ export class GrassApplication {
     const geo = new THREE.PlaneGeometry(1, 1, 512, 512);
     const plane = new THREE.Mesh(geo, mat);
     plane.rotateX(-Math.PI / 2);
-    plane.scale.setScalar(500);
+    plane.rotateZ(Math.PI);
+    plane.scale.setScalar(GRASS_PATCH_SIZE * 2);
     this.scene.add(plane);
     this.materials.push(mat);
   }
@@ -118,20 +125,32 @@ export class GrassApplication {
     const tileDataTexture = new THREE.TextureLoader().load(
       FILE_BASE + "/grass_data.jpg"
     );
-    const mat = new THREE.ShaderMaterial({
-      uniforms: {
-        grassParams: {
-          value: new THREE.Vector4(
-            GRASS_SEGMENTS,
-            GRASS_PATCH_SIZE,
-            GRASS_WIDTH,
-            GRASS_HEIGHT
-          ),
-        },
-        time: { value: 0 },
-        resolution: { value: new THREE.Vector2(1, 1) },
-        // tileDataTexture: { value: tileDataTexture },
+    const uniforms = {
+      grassParams: {
+        value: new THREE.Vector4(
+          GRASS_SEGMENTS,
+          GRASS_PATCH_SIZE,
+          GRASS_WIDTH,
+          GRASS_HEIGHT
+        ),
       },
+      time: { value: 0 },
+      resolution: { value: new THREE.Vector2(1, 1) },
+      grassDiffuse: { value: null as null | THREE.DataArrayTexture },
+      tileDataTexture: { value: tileDataTexture },
+      u_textured: { value: false },
+    };
+
+    const diffuse = new TextureAtlas();
+    diffuse.loadAtlas("diffuse", [
+      FILE_BASE + "/grass1.png",
+      FILE_BASE + "/grass2.png",
+    ]);
+    diffuse.onLoad = () => {
+      uniforms.grassDiffuse.value = diffuse.Info["diffuse"].atlas!;
+    };
+    const mat = new THREE.ShaderMaterial({
+      uniforms,
       vertexShader: shaders.grass.vertex,
       fragmentShader: shaders.grass.fragment,
       side: THREE.FrontSide,

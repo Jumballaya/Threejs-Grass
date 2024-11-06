@@ -2,6 +2,10 @@ varying vec3 vWorldPosition;
 varying vec3 vWorldNormal;
 varying vec2 vUv;
 
+uniform sampler2D displacementTexture;
+uniform float patchSize;
+
+
 vec3 hash(vec3 p) {
 	p = vec3(dot(p, vec3(127.1, 311.7, 74.7)),
     dot(p, vec3(269.5, 183.3, 246.1)),
@@ -32,7 +36,9 @@ vec3 terrainHeight(vec3 worldPos) {
 void main() {
   vec4 localSpacePosition = vec4(position, 1.0);
   vec4 worldPosition = modelMatrix * localSpacePosition;
-  worldPosition.xyz = terrainHeight(worldPosition.xyz);
+
+  vec4 terrain = texture(displacementTexture, uv);
+  worldPosition.xyz +=  vec3(0.0, terrain.r * patchSize / 2.0, 0.0);
 
   vWorldPosition = worldPosition.xyz;
   vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);

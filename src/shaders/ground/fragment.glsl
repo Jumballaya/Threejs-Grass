@@ -4,7 +4,6 @@ varying vec2 vUv;
 
 uniform sampler2D diffuseTexture;
 
-
 float inverseLerp(float v, float minValue, float maxValue) {
   return (v - minValue) / (maxValue - minValue);
 }

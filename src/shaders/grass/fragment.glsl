@@ -1,10 +1,12 @@
 uniform vec2 resolution;
 uniform float time;
+uniform sampler2DArray grassDiffuse;
+uniform bool u_textured;
 
 varying vec3 v_worldPosition;
 varying vec3 v_color;
 varying vec3 v_normal;
-varying vec4 v_grassData; // [x pos, -, -, -]
+varying vec4 v_grassData; // [x pos, height percent, xSide, grass type]
 
 float inverseLerp(float v, float minValue, float maxValue) {
   return (v - minValue) / (maxValue - minValue);
@@ -43,9 +45,21 @@ vec3 hemiLight(vec3 normal, vec3 groundColor, vec3 skyColor) {
 }
 
 void main() {
-  vec3 baseColor = mix(v_color * 0.75, v_color, smoothstep(0.125, 0.0, abs(v_grassData.x)));
+
+  vec2 uv = v_grassData.zy;
   vec3 normal = normalize(v_normal);
   vec3 viewDir = normalize(cameraPosition - v_worldPosition);
+  float grassType = v_grassData.w;
+
+  // texture base
+  vec4 diffuseColor = texture2D(grassDiffuse, vec3(uv, grassType));
+  vec3 baseColor = mix(v_color * 0.75, v_color, smoothstep(0.125, 0.0, abs(v_grassData.x)));
+  
+  if (u_textured) {
+   baseColor = diffuseColor.rgb;
+   if (diffuseColor.w < 0.5) discard;
+  }
+
 
   // Hemi lighting
   vec3 c1 = vec3(1.0, 1.0, 0.75);
@@ -65,7 +79,7 @@ void main() {
 
   vec3 lighting = (ao * (diffuseLighting * 0.5 + ambientLighting)) + 2.0 * specular;
 
-  vec3 color = baseColor * lighting;
 
+  vec3 color = baseColor.xyz * lighting;
   gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }

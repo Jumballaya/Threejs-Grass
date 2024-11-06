@@ -6,8 +6,10 @@ varying vec4 v_grassData;
 varying vec3 v_normal;
 varying vec3 v_worldPosition;
 
+uniform bool u_textured;
 uniform float time;
 uniform sampler2D tileDataTexture;
+uniform sampler2D displacementTexture;
 
 const vec3 BASE_COLOR = vec3(0.1, 0.4, 0.04);
 const vec3 TIP_COLOR = vec3(0.5, 0.7, 0.3);
@@ -131,17 +133,27 @@ void main() {
   vec2 hashedInstanceID = hash21(float(gl_InstanceID)) * 2.0 - 1.0;
   vec3 grassOffset = vec3(hashedInstanceID.x, 0.0, hashedInstanceID.y) * GRASS_PATCH_SIZE;
 
-  grassOffset = terrainHeight(grassOffset);
-
   vec3 grassBladeWorldPos = (modelMatrix * vec4(grassOffset, 1.0)).xyz;
   vec3 hashVal = hash(grassBladeWorldPos);
+
+  vec2 uv = (vec2(-grassBladeWorldPos.x, grassBladeWorldPos.z) / GRASS_PATCH_SIZE) * 0.5 + 0.5;
+
+  vec4 terrain = texture(displacementTexture, uv);
+  grassOffset.y = terrain.r  * (GRASS_PATCH_SIZE / 2.0);
+
+  float grassType = saturate(hashVal.z);
+  if (grassType < 0.5) {
+    grassType = 0.0;
+  } else {
+    grassType = 1.0;
+  }
 
   // Grass Rotation
   const float PI = 3.141596;
   float angle = remap(hashVal.x, -1.0, 1.0, -PI, PI);
 
   // TILE DATA
-  vec4 tileData = texture2D(tileDataTexture, (vec2(-grassBladeWorldPos.x, grassBladeWorldPos.z) / GRASS_PATCH_SIZE) * 0.5 + 0.5);
+  vec4 tileData = texture2D(tileDataTexture, uv);
   float stiffness = 1.0 - tileData.r * 0.85;
   float tileGrassHeight = tileData.r * 1.05;
 
@@ -156,7 +168,11 @@ void main() {
   float zSide = float(zTest);
   float heightPercent = float(vertID - xTest) / (float(GRASS_SEGMENTS) * 2.0);
 
+  // No grass diffuse texture
   float width = GRASS_WIDTH * ease_out(1.0 - heightPercent, 2.0);
+  if (u_textured) {
+    width = GRASS_WIDTH;
+  }
   float height = GRASS_HEIGHT - (tileGrassHeight * GRASS_HEIGHT);
 
   // calculate the vertex position
@@ -217,5 +233,5 @@ void main() {
   v_normal = normalize(modelMatrix * vec4(grassLocalNormal, 0.0)).xyz;
   v_worldPosition = (modelMatrix * vec4(grassLocalPosition, 1.0)).xyz;
 
-  v_grassData = vec4(x, heightPercent, 0.0, 0.0);
+  v_grassData = vec4(x, heightPercent, xSide, grassType);
 }
