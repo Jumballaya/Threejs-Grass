@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { GrassFoliage } from "./foliage/GrassFoliage";
 
 export type TerrainTileSettings = {
   patchSize: number;
@@ -17,12 +18,16 @@ export class TerrainTile {
     height: 2,
   };
 
-  private grassGeometry: THREE.InstancedBufferGeometry;
-  private grassMesh!: THREE.Mesh;
-  private grassMaterial!: THREE.ShaderMaterial;
+  private foliage = {
+    grass: null as GrassFoliage | null,
+    rocks: null,
+  };
 
-  private terrainMesh!: THREE.Mesh;
-  private terrainMaterial!: THREE.ShaderMaterial;
+  private boundingSphere: THREE.Sphere;
+
+  private grassMaterial: THREE.ShaderMaterial | null = null;
+  private terrainMesh: THREE.Mesh | null = null;
+  private terrainMaterial: THREE.ShaderMaterial | null = null;
 
   private terrainId: number = 0;
 
@@ -30,27 +35,31 @@ export class TerrainTile {
     scene: THREE.Scene,
     terrainMaterial: THREE.ShaderMaterial,
     grassMaterial: THREE.ShaderMaterial,
-    grassGeometry: THREE.InstancedBufferGeometry,
     settings?: Partial<TerrainTileSettings>
   ) {
-    this.grassGeometry = grassGeometry;
     this.settings = Object.assign(this.settings, settings);
+    const boundingRadius = 1 + this.settings.patchSize * 2;
+    this.boundingSphere = new THREE.Sphere(this.position, boundingRadius);
     this.setupGround(terrainMaterial, scene);
     this.setupGrass(grassMaterial, scene);
   }
 
   public set position(pos: THREE.Vector3) {
-    this.grassMesh.position.set(pos.x, pos.y, pos.z);
-    this.terrainMesh.position.set(pos.x, pos.y, pos.z);
-  }
-
-  public set rotation(rad: number) {
-    this.grassMesh.rotateY(rad);
-    this.terrainMesh.rotateZ(rad);
+    this.terrainMesh?.position.set(pos.x, pos.y, pos.z);
+    if (this.foliage.grass) {
+      this.foliage.grass.position = pos;
+    }
   }
 
   public get materials(): THREE.ShaderMaterial[] {
-    return [this.grassMaterial, this.terrainMaterial];
+    const mats: THREE.ShaderMaterial[] = [];
+    if (this.grassMaterial) {
+      mats.push(this.grassMaterial);
+    }
+    if (this.terrainMaterial) {
+      mats.push(this.terrainMaterial);
+    }
+    return mats;
   }
 
   public get id(): number {
@@ -59,13 +68,21 @@ export class TerrainTile {
 
   public set id(tid: number) {
     this.terrainId = tid;
-    this.terrainMaterial.uniforms.u_tile_id.value = this.terrainId;
-    this.grassMaterial.uniforms.u_tile_id.value = this.terrainId;
+    if (this.terrainMaterial) {
+      this.terrainMaterial.uniforms.u_tile_id.value = this.terrainId;
+    }
+    if (this.foliage.grass) {
+      this.foliage.grass.id = this.terrainId;
+    }
   }
 
   public set visible(v: boolean) {
-    this.terrainMesh.visible = v;
-    this.grassMesh.visible = v;
+    if (this.terrainMesh) {
+      this.terrainMesh.visible = v;
+    }
+    if (this.foliage.grass) {
+      this.foliage.grass.visible = v;
+    }
   }
 
   private setupGround(
@@ -84,15 +101,11 @@ export class TerrainTile {
   }
 
   private setupGrass(grassMaterial: THREE.ShaderMaterial, scene: THREE.Scene) {
-    const mat = grassMaterial.clone();
-    const grassGeometry = this.grassGeometry.clone();
-    const boundingRadius = 1 + this.settings.patchSize * 2;
-    grassGeometry.boundingSphere = new THREE.Sphere(
-      this.position,
-      boundingRadius
+    this.foliage.grass = new GrassFoliage(
+      grassMaterial,
+      this.boundingSphere,
+      this.settings
     );
-    this.grassMesh = new THREE.Mesh(grassGeometry, mat);
-    scene.add(this.grassMesh);
-    this.grassMaterial = mat;
+    scene.add(this.foliage.grass.getMesh());
   }
 }

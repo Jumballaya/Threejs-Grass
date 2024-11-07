@@ -18,7 +18,6 @@ export class TerrainSection {
 
   private groundMaterial?: THREE.ShaderMaterial;
   private grassMaterial?: THREE.ShaderMaterial;
-  private grassGeometry?: THREE.InstancedBufferGeometry;
 
   private scene: THREE.Scene;
 
@@ -73,7 +72,6 @@ export class TerrainSection {
     this.tileData.onLoad = () => {
       this.groundMaterial = this.createGroundMaterial();
       this.grassMaterial = this.createGrassMaterial();
-      this.grassGeometry = this.createGrassGeometry();
       this.generateTiles();
     };
     this.tileData.loadAtlasFromBinary("tile-data", data, 256, 256, 64);
@@ -81,12 +79,7 @@ export class TerrainSection {
 
   private generateTiles() {
     const dataTexture = this.tileData.Info["tile-data"].atlas;
-    if (
-      !dataTexture ||
-      !this.groundMaterial ||
-      !this.grassMaterial ||
-      !this.grassGeometry
-    ) {
+    if (!dataTexture || !this.groundMaterial || !this.grassMaterial) {
       return;
     }
 
@@ -97,7 +90,6 @@ export class TerrainSection {
           this.scene,
           this.groundMaterial,
           this.grassMaterial,
-          this.grassGeometry,
           this.tileSettings
         );
         tile.position = new THREE.Vector3(
@@ -161,39 +153,5 @@ export class TerrainSection {
       fragmentShader: shaders.grass.fragment,
       side: THREE.FrontSide,
     });
-  }
-
-  private createGrassGeometry(): THREE.InstancedBufferGeometry {
-    const instanceCount =
-      this.tileSettings.patchSize *
-      this.tileSettings.patchSize *
-      this.tileSettings.grassDensity;
-    const vertexCount = (this.tileSettings.segments + 1) * 2;
-    const indices: number[] = [];
-    for (let i = 0; i < this.tileSettings.segments; i++) {
-      const vi = i * 2;
-      indices[i * 12 + 0] = vi + 0;
-      indices[i * 12 + 1] = vi + 1;
-      indices[i * 12 + 2] = vi + 2;
-
-      indices[i * 12 + 3] = vi + 2;
-      indices[i * 12 + 4] = vi + 1;
-      indices[i * 12 + 5] = vi + 3;
-
-      const fi = vertexCount + vi;
-      indices[i * 12 + 6] = fi + 2;
-      indices[i * 12 + 7] = fi + 1;
-      indices[i * 12 + 8] = fi + 0;
-
-      indices[i * 12 + 9] = fi + 3;
-      indices[i * 12 + 10] = fi + 1;
-      indices[i * 12 + 11] = fi + 2;
-    }
-
-    const geo = new THREE.InstancedBufferGeometry();
-    geo.instanceCount = instanceCount;
-    geo.setIndex(indices);
-
-    return geo;
   }
 }
