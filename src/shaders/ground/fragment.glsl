@@ -9,14 +9,13 @@ uniform sampler2D diffuseTexture;
 void main() {
   vec3 viewDir = normalize(cameraPosition - vWorldPosition);
 
-  // Grid
-  float grid1 = texture(diffuseTexture, vWorldPosition.xz * 0.1).r;
-	float grid2 = texture(diffuseTexture, vWorldPosition.xz * 1.0).r;
+  // Dirt
+  float groundHash = hashv2(floor(vWorldPosition.xz * 2.0));
+  mat3 rot = rotateY(3.141596 / 3.0 * groundHash);
+	vec4 dirt1 = texture(diffuseTexture, (rot * vWorldPosition).xz);
+	vec4 dirt2 = texture(diffuseTexture, vWorldPosition.xz * 3.0);
+  vec4 dirt = mix(dirt1, dirt2, saturate(groundHash));
 
-	float gridHash1 = hashv2(floor(vWorldPosition.xz * 1.0));
-
-	vec3 gridcolor = mix(vec3(0.5 + remap(gridHash1, -1.0, 1.0, -0.2, 0.2)), vec3(0.0625), grid2);
-	gridcolor = mix(gridcolor, vec3(0.00625), grid1);
 
   // Lighting
   vec3 lightDir = normalize(vec3(-1.0, 0.5, 1.0));
@@ -32,9 +31,8 @@ void main() {
   float inscatter = 1.0 - exp(-fogDist * fogDist * mix(0.0005, 0.001, sunFactor));
   float extinction = exp(-fogDist * fogDist * 0.01);
 
-  gridcolor = v_color.rgb;
-  vec3 color = gridcolor * extinction + fogColor * inscatter;
+  vec3 color = dirt.rgb * extinction + fogColor * inscatter;
 
 
-  gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
+  gl_FragColor = vec4(pow(color, vec3(1.0 / 1.75)), 1.0);
 }

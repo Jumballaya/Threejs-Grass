@@ -38,13 +38,12 @@ export class GrassApplication {
       {
         patchSize: 10,
         grassDensity: 50,
-        segments: 4,
-        width: 0.25,
-        height: 4,
+        segments: 6,
+        width: 0.125,
+        height: 3,
       },
       Array.from(new Array(64)).map(
         (_, i) => `/tile_data/tile_data_${i + 1}.jpg`
-        // (_, i) => `/tile_data2/image_data_${i + 1}.jpg`
       )
     );
 
