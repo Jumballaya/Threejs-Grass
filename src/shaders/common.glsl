@@ -144,8 +144,36 @@ vec3 hemiLight(vec3 normal, vec3 groundColor, vec3 skyColor) {
 /**
  *         General Application Stuff
  */
+
+const vec3 COLOR_SUN = vec3(1.0, 0.9, 0.65);
+const vec3 COLOR_SKY_DARK = vec3(0.025, 0.065, 0.5);
+const vec3 COLOR_SKY_LIGHT = vec3(0.4, 0.5, 1.0);
+
 vec3 terrainHeight(vec3 worldPos, vec4 terrain) {
   return vec3(worldPos.x, terrain.g * 10.0, worldPos.z);
 }
 
+vec3 applyFog(
+  vec3 cameraPosition,
+  vec3 worldPosition,
+  vec3 lightDir,
+  vec3 viewDir,
+  float falloff,
+  vec3 baseColor,
+  vec3 skyColor,
+  vec3 sunColor
+) {
+  float sunFactor = pow(saturate(dot(lightDir, vec3(viewDir.x, -viewDir.y, viewDir.z))), 8.0);
+  vec3 fogColor = mix(skyColor, sunColor, sunFactor);
+  float fogDist = distance(cameraPosition, worldPosition) / falloff;
+  float inscatter = 1.0 - exp(-fogDist * fogDist * mix(0.0005, 0.001, sunFactor));
+  float extinction = exp(-fogDist * fogDist * 0.01);
+  return baseColor * extinction + fogColor * inscatter;
+}
 
+vec3 getSkyColor(float t, vec3 lightDir, vec3 viewDir) {
+  float skyT = exp(saturate(t) * -40.0);
+  float sunFactor = pow(saturate(dot(lightDir, vec3(viewDir.x, -viewDir.y, viewDir.z))), 8.0);
+  vec3 skyColor = mix(COLOR_SKY_DARK, COLOR_SKY_LIGHT, skyT);
+  return mix(skyColor, COLOR_SUN, sunFactor);
+}

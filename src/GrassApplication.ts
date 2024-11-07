@@ -13,7 +13,7 @@ export class GrassApplication {
   private scene = new THREE.Scene();
   private sky!: THREE.Mesh;
 
-  private terrain: TerrainSection;
+  private terrain: TerrainSection[] = [];
 
   private totalTime = 0;
 
@@ -32,22 +32,22 @@ export class GrassApplication {
       this.threejs.domElement
     );
 
-    this.terrain = new TerrainSection(
+    const t1 = new TerrainSection(
       this.scene,
       8,
       8,
       {
         patchSize: 10,
-        grassDensity: 50,
+        grassDensity: 25,
         segments: 6,
         width: 0.125,
         height: 3,
       },
       FILE_BASE + "/tile_data/tile-group-0.data"
     );
-
-    this.terrain.onLoad = () => {
-      this.materials.push(...this.terrain.materials);
+    this.terrain.push(t1);
+    t1.onLoad = () => {
+      this.materials.push(...t1.materials);
     };
 
     this.setupProject();

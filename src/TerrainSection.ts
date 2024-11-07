@@ -8,11 +8,12 @@ export class TerrainSection {
   private width: number;
   private height: number;
 
+  private position: THREE.Vector3;
+
   private tileData: TextureAtlas;
   private tiles: TerrainTile[] = [];
   private tileSettings: TerrainTileSettings;
 
-  private boundingSphere: THREE.Sphere;
   private terrainTexture: THREE.Texture;
 
   private groundMaterial?: THREE.ShaderMaterial;
@@ -32,18 +33,15 @@ export class TerrainSection {
     width: number,
     height: number,
     tileSettings: TerrainTileSettings,
-    tileData: string
+    tileData: string,
+    position = new THREE.Vector3(0, 0, 0)
   ) {
     this.scene = scene;
     this.width = width;
     this.height = height;
     this.tileData = new TextureAtlas();
     this.tileSettings = tileSettings;
-
-    this.boundingSphere = new THREE.Sphere(
-      new THREE.Vector3(0, 0, 0),
-      1 + tileSettings.patchSize * 2 * width
-    );
+    this.position = position;
 
     this.terrainTexture = new THREE.TextureLoader().load(
       FILE_BASE + "/dirt1.png"
@@ -102,7 +100,11 @@ export class TerrainSection {
           this.grassGeometry,
           this.tileSettings
         );
-        tile.position = new THREE.Vector3(-tileSize * x, 0, -tileSize * y);
+        tile.position = new THREE.Vector3(
+          this.position.x + -tileSize * x,
+          this.position.y,
+          this.position.z + -tileSize * y
+        );
         tile.id = y * this.width + x;
         this.tiles.push(tile);
         this.materials.push(...tile.materials);
@@ -191,7 +193,6 @@ export class TerrainSection {
     const geo = new THREE.InstancedBufferGeometry();
     geo.instanceCount = instanceCount;
     geo.setIndex(indices);
-    geo.boundingSphere = this.boundingSphere;
 
     return geo;
   }

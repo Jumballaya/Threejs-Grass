@@ -1,4 +1,5 @@
 uniform vec2 resolution;
+uniform float time;
 
 varying vec3 vWorldPosition;
 varying vec3 vWorldNormal;
@@ -14,11 +15,7 @@ void main() {
   vec3 viewDir = normalize(cameraPosition - vWorldPosition);
   vec3 lightDir = normalize(vec3(-1.0, 0.5, 1.0));
 
-  float skyT = exp(saturate(viewDir.y) * -40.0);
-  float sunFactor = pow(saturate(dot(lightDir, vec3(viewDir.x, -viewDir.y, viewDir.z))), 8.0);
-  vec3 skyColor = mix(vec3(0.025, 0.065, 0.5), vec3(0.4, 0.5, 1.0), skyT);
-  vec3 sunColor = vec3(1.0, 0.9, 0.65);
-  vec3 color = mix(skyColor, sunColor, sunFactor);
+  vec3 color = getSkyColor(remap(cos(time / 20.0), -1.0, 1.0, 0.0, 0.1), lightDir, viewDir);
 
   gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }

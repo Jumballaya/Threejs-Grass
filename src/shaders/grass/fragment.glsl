@@ -1,31 +1,18 @@
-uniform vec3 u_camera_direction;
 uniform vec2 resolution;
 uniform float time;
-uniform sampler2DArray grassDiffuse;
-uniform bool u_textured;
-
 
 varying vec3 v_worldPosition;
 varying vec3 v_color;
 varying vec3 v_normal;
-varying vec4 v_grassData; // [x pos, height percent, xSide, grass type]
+varying vec4 v_grassData; // [x pos, height percent, xSide, - ]
 
 void main() {
-
   vec2 uv = v_grassData.zy;
   vec3 normal = normalize(v_normal);
   vec3 viewDir = normalize(cameraPosition - v_worldPosition);
-  float grassType = v_grassData.w;
 
-  // texture base
-  vec4 diffuseColor = texture2D(grassDiffuse, vec3(uv, grassType));
+  // base color
   vec3 baseColor = mix(v_color * 0.75, v_color, smoothstep(0.125, 0.0, abs(v_grassData.x)));
-  
-  if (u_textured) {
-   baseColor = diffuseColor.rgb;
-   if (diffuseColor.w < 0.5) discard;
-  }
-
 
   // Hemi lighting
   vec3 c1 = vec3(1.0, 1.0, 0.75);
@@ -44,22 +31,19 @@ void main() {
   float ao = remap(pow(v_grassData.y, 2.0), 0.0, 1.0, 0.125, 1.0);
 
   vec3 lighting = (ao * (diffuseLighting * 0.5 + ambientLighting)) + 2.0 * specular;
-
-  /// Sun
-  float skyT = exp(saturate(0.0) * -40.0);
-  float sunFactor = pow(saturate(dot(lightDir, viewDir)), 8.0);
-  vec3 skyColor = mix(vec3(0.025, 0.065, 0.5), vec3(0.4, 0.5, 1.0), skyT);
-  vec3 sunColor = vec3(1.0, 0.9, 0.65);
-  vec3 fogColor = mix(skyColor, sunColor, sunFactor);
+  vec3 color = baseColor.xyz * lighting;
 
   // Fog
-  float fogDist = distance(cameraPosition, v_worldPosition) / 8.0;
-  float inscatter = 1.0 - exp(-fogDist * fogDist * mix(0.0005, 0.001, sunFactor));
-  float extinction = exp(-fogDist * fogDist * 0.01);
-
-
-  vec3 color = baseColor.xyz * lighting;
-  color = color * extinction + fogColor * inscatter;
+  color = applyFog(
+    cameraPosition,
+    v_worldPosition,
+    lightDir,
+    viewDir,
+    4.0,
+    color,
+    getSkyColor(remap(cos(time / 20.0), -1.0, 1.0, 0.0, 0.1), lightDir, viewDir),
+    COLOR_SUN
+  );
 
   gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }

@@ -86,6 +86,11 @@ export class TerrainTile {
   private setupGrass(grassMaterial: THREE.ShaderMaterial, scene: THREE.Scene) {
     const mat = grassMaterial.clone();
     const grassGeometry = this.grassGeometry.clone();
+    const boundingRadius = 1 + this.settings.patchSize * 2;
+    grassGeometry.boundingSphere = new THREE.Sphere(
+      this.position,
+      boundingRadius
+    );
     this.grassMesh = new THREE.Mesh(grassGeometry, mat);
     scene.add(this.grassMesh);
     this.grassMaterial = mat;
