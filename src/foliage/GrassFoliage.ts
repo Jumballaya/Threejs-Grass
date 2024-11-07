@@ -26,6 +26,7 @@ export class GrassFoliage {
   constructor(
     material: THREE.ShaderMaterial,
     boundingSphere: THREE.Sphere,
+    id = 0,
     settings = DEFAULT_SETTINGS
   ) {
     this.settings = settings;
@@ -33,6 +34,14 @@ export class GrassFoliage {
     this.geometry = this.createGeometry();
     this.geometry.boundingSphere = boundingSphere;
     this.mesh = new THREE.Mesh(this.geometry, this.material);
+
+    this.material.uniforms.u_tile_id.value = id;
+    this.material.uniforms.grassParams.value = new THREE.Vector4(
+      this.settings.segments,
+      this.settings.patchSize,
+      this.settings.width,
+      this.settings.height
+    );
   }
 
   public getMesh(): THREE.Mesh {

@@ -15,7 +15,7 @@ void main() {
   vec3 viewDir = normalize(cameraPosition - vWorldPosition);
   vec3 lightDir = normalize(vec3(-1.0, 0.5, 1.0));
 
-  vec3 color = getSkyColor(remap(cos(time / 20.0), -1.0, 1.0, 0.0, 0.1), lightDir, viewDir);
+  vec3 color = getSkyColor(0.0, lightDir, viewDir);
 
   gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }

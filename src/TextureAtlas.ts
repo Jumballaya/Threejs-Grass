@@ -1,10 +1,5 @@
 import * as THREE from "three";
 
-type TextureEntry = {
-  textures: Array<() => ImageData>;
-  atlas?: THREE.DataArrayTexture;
-};
-
 function getImageData(image: THREE.Texture["image"]) {
   const canvas = document.createElement("canvas");
   canvas.width = image.width;
@@ -21,7 +16,7 @@ function getImageData(image: THREE.Texture["image"]) {
 export class TextureAtlas {
   private manager: THREE.LoadingManager;
   private loader: THREE.TextureLoader;
-  private textures: Record<string, TextureEntry> = {};
+  private textures: Record<string, THREE.DataArrayTexture> = {};
 
   private listeners = {
     onLoad: () => {},
@@ -30,9 +25,6 @@ export class TextureAtlas {
   constructor() {
     this.manager = new THREE.LoadingManager();
     this.loader = new THREE.TextureLoader(this.manager);
-    this.manager.onLoad = () => {
-      this.onManagerLoad();
-    };
   }
 
   public set onLoad(handler: () => void) {
@@ -43,10 +35,27 @@ export class TextureAtlas {
     return this.textures;
   }
 
-  public loadAtlas(atlas: string, files: string[]) {
-    this.textures[atlas] = {
-      textures: files.map((n) => this.loadType(n)),
-    };
+  public loadAtlasFromImage(
+    atlas: string,
+    file: string,
+    rowCount: number,
+    colCount: number
+  ) {
+    // TODO
+  }
+
+  public loadAtlasFromImages(
+    atlas: string,
+    files: string[]
+  ): THREE.DataArrayTexture {
+    const [binary, width, height] = this.getBinaryFromImages(files);
+    this.textures[atlas] = this.createDataArrayTexture(
+      binary,
+      width,
+      height,
+      files.length
+    );
+    return this.textures[atlas];
   }
 
   public loadAtlasFromBinary(
@@ -55,66 +64,49 @@ export class TextureAtlas {
     width: number,
     height: number,
     depth: number
-  ): void {
-    const texture = this.createDataArrayTexture(binary, width, height, depth);
-    this.textures[atlas] = {
-      atlas: texture,
-      textures: [],
-    };
+  ): THREE.DataArrayTexture {
+    this.textures[atlas] = this.createDataArrayTexture(
+      binary,
+      width,
+      height,
+      depth
+    );
     this.listeners.onLoad();
+    return this.textures[atlas];
   }
 
-  private onManagerLoad(): void {
-    for (let k in this.textures) {
-      let x: number | undefined;
-      let y: number | undefined;
-      const atlas = this.textures[k];
-      let data: Uint8Array = new Uint8Array();
+  private getBinaryFromImages(files: string[]): [Uint8Array, number, number] {
+    let x = -1;
+    let y = -1;
+    let data: Uint8Array = new Uint8Array();
 
-      for (let t = 0; t < atlas.textures.length; t++) {
-        const loader = atlas.textures[t];
-        const curData = loader();
-        const h = curData.height;
-        const w = curData.width;
+    for (let t = 0; t < files.length; t++) {
+      const curData = this.loadType(files[t]);
+      const h = curData.height;
+      const w = curData.width;
 
-        if (x == undefined) {
-          x = w;
-          y = h;
-          data = new Uint8Array(atlas.textures.length * 4 * x * y);
-        }
-
-        if (w !== x || h !== y) {
-          console.error("Texture dimensions do not match");
-          return;
-        }
-        const offset = t * (4 * w * h);
-        data.set(curData.data, offset);
+      if (x == -1) {
+        x = w;
+        y = h;
+        data = new Uint8Array(files.length * 4 * x * y);
       }
 
-      console.log(x!, y!, atlas.textures.length);
-
-      const diffuse = this.createDataArrayTexture(
-        data,
-        x!,
-        y!,
-        atlas.textures.length
-      );
-      atlas.atlas = diffuse;
+      if (w !== x || h !== y) {
+        throw new Error("Texture dimensions do not match");
+      }
+      const offset = t * (4 * w * h);
+      data.set(curData.data, offset);
     }
 
-    this.listeners.onLoad();
+    return [data, x, y];
   }
 
-  private loadType(t: string | ImageData): () => ImageData {
+  private loadType(t: string | ImageData): ImageData {
     if (typeof t === "string") {
       const texture = this.loader.load(t);
-      return () => {
-        return getImageData(texture.image);
-      };
+      return getImageData(texture.image);
     }
-    return () => {
-      return t;
-    };
+    return t;
   }
 
   private createDataArrayTexture(

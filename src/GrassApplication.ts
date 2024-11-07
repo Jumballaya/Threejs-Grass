@@ -3,6 +3,7 @@ import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { shaders } from "./shaders";
 import { TerrainSection } from "./TerrainSection";
 import { FILE_BASE } from "./common";
+import { Library } from "./Library";
 
 export class GrassApplication {
   private threejs = new THREE.WebGLRenderer();
@@ -14,6 +15,8 @@ export class GrassApplication {
   private sky!: THREE.Mesh;
 
   private terrain: TerrainSection[] = [];
+
+  private library = new Library();
 
   private totalTime = 0;
 
@@ -32,26 +35,58 @@ export class GrassApplication {
       this.threejs.domElement
     );
 
-    const t1 = new TerrainSection(
-      this.scene,
-      8,
-      8,
-      {
-        patchSize: 10,
-        grassDensity: 25,
-        segments: 6,
-        width: 0.125,
-        height: 3,
-      },
-      FILE_BASE + "/tile_data/tile-group-0.data"
-    );
-    this.terrain.push(t1);
-    t1.onLoad = () => {
-      this.materials.push(...t1.materials);
-    };
+    this.library
+      .loadArrayTextureFromBinary(
+        "tile-data-0",
+        "/tile_data/tile-group-0.data",
+        256,
+        256,
+        64
+      )
+      .then(() => {
+        const dirt = this.library.loadTexture("dirt", "/dirt1.png");
+        dirt.wrapS = THREE.RepeatWrapping;
+        dirt.wrapT = THREE.RepeatWrapping;
 
-    this.setupProject();
-    this.setupResizer();
+        this.library.loadShaderMaterial("ground", {
+          time: { value: 0 },
+          resolution: { value: new THREE.Vector2(1, 1) },
+          diffuseTexture: { value: dirt },
+          tileDataTexture: {
+            value: this.library.getArrayTexture("tile-data-0"),
+          },
+          patchSize: { value: 0 },
+          u_tile_id: { value: 0 },
+        });
+
+        this.library.loadShaderMaterial("grass", {
+          grassParams: {
+            value: new THREE.Vector4(0, 0, 0, 0),
+          },
+          time: { value: 0 },
+          resolution: { value: new THREE.Vector2(1, 1) },
+          tileDataTexture: {
+            value: this.library.getArrayTexture("tile-data-0"),
+          },
+          u_tile_id: { value: 0 },
+        });
+
+        this.library.loadShaderMaterial("sky", {
+          time: { value: 0 },
+          resolution: { value: new THREE.Vector2(1, 1) },
+        });
+
+        const t1 = new TerrainSection(this.scene, this.library, 8, 8, {
+          patchSize: 10,
+          grassDensity: 25,
+          segments: 6,
+          width: 0.125,
+          height: 3,
+        });
+        this.terrain.push(t1);
+        this.setupProject();
+        this.setupResizer();
+      });
   }
 
   public step(deltaTime: number) {
@@ -80,15 +115,9 @@ export class GrassApplication {
   }
 
   private setupSky() {
-    const mat = new THREE.ShaderMaterial({
-      uniforms: {
-        time: { value: 0 },
-        resolution: { value: new THREE.Vector2(1, 1) },
-      },
-      vertexShader: shaders.sky.vertex,
-      fragmentShader: shaders.sky.fragment,
-      side: THREE.BackSide,
-    });
+    const mat = this.library.getShaderMaterial("sky");
+    if (!mat) throw new Error("unable to load sky shader material");
+
     const geo = new THREE.SphereGeometry(5000, 32, 15);
 
     this.sky = new THREE.Mesh(geo, mat);

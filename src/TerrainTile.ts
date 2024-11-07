@@ -90,6 +90,8 @@ export class TerrainTile {
     scene: THREE.Scene
   ) {
     const mat = terrainMaterial.clone();
+    mat.uniforms.patchSize.value = this.settings.patchSize;
+    mat.uniforms.u_tile_id.value = this.terrainId;
     const geo = new THREE.PlaneGeometry(1, 1, 128, 128);
     const terrain = new THREE.Mesh(geo, mat);
     terrain.rotateX(-Math.PI / 2);
@@ -104,6 +106,7 @@ export class TerrainTile {
     this.foliage.grass = new GrassFoliage(
       grassMaterial,
       this.boundingSphere,
+      this.terrainId,
       this.settings
     );
     scene.add(this.foliage.grass.getMesh());

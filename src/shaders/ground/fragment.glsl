@@ -29,7 +29,7 @@ void main() {
     viewDir,
     4.0,
     dirt.rgb,
-    getSkyColor(remap(cos(time / 20.0), -1.0, 1.0, 0.0, 0.1), lightDir, viewDir),
+    getSkyColor(0.0, lightDir, viewDir),
     COLOR_SUN
   );
 
