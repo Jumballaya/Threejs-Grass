@@ -49,6 +49,21 @@ export class TextureAtlas {
     };
   }
 
+  public loadAtlasFromBinary(
+    atlas: string,
+    binary: Uint8Array,
+    width: number,
+    height: number,
+    depth: number
+  ): void {
+    const texture = this.createDataArrayTexture(binary, width, height, depth);
+    this.textures[atlas] = {
+      atlas: texture,
+      textures: [],
+    };
+    this.listeners.onLoad();
+  }
+
   private onManagerLoad(): void {
     for (let k in this.textures) {
       let x: number | undefined;
@@ -76,20 +91,14 @@ export class TextureAtlas {
         data.set(curData.data, offset);
       }
 
-      const diffuse = new THREE.DataArrayTexture(
+      console.log(x!, y!, atlas.textures.length);
+
+      const diffuse = this.createDataArrayTexture(
         data,
-        x,
-        y,
+        x!,
+        y!,
         atlas.textures.length
       );
-      diffuse.format = THREE.RGBAFormat;
-      diffuse.type = THREE.UnsignedByteType;
-      diffuse.minFilter = THREE.LinearMipMapLinearFilter;
-      diffuse.magFilter = THREE.LinearFilter;
-      diffuse.wrapS = THREE.ClampToEdgeWrapping;
-      diffuse.wrapT = THREE.ClampToEdgeWrapping;
-      diffuse.generateMipmaps = true;
-      diffuse.needsUpdate = true;
       atlas.atlas = diffuse;
     }
 
@@ -106,5 +115,23 @@ export class TextureAtlas {
     return () => {
       return t;
     };
+  }
+
+  private createDataArrayTexture(
+    data: Uint8Array,
+    w: number,
+    h: number,
+    depth: number
+  ) {
+    const texture = new THREE.DataArrayTexture(data, w, h, depth);
+    texture.format = THREE.RGBAFormat;
+    texture.type = THREE.UnsignedByteType;
+    texture.minFilter = THREE.LinearMipMapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.generateMipmaps = true;
+    texture.needsUpdate = true;
+    return texture;
   }
 }

@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { shaders } from "./shaders";
 import { TerrainSection } from "./TerrainSection";
+import { FILE_BASE } from "./common";
 
 export class GrassApplication {
   private threejs = new THREE.WebGLRenderer();
@@ -42,9 +43,7 @@ export class GrassApplication {
         width: 0.125,
         height: 3,
       },
-      Array.from(new Array(64)).map(
-        (_, i) => `/tile_data/tile_data_${i + 1}.jpg`
-      )
+      FILE_BASE + "/tile_data/tile-group-0.data"
     );
 
     this.terrain.onLoad = () => {

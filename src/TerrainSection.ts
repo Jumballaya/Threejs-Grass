@@ -2,8 +2,7 @@ import * as THREE from "three";
 import { TerrainTile, TerrainTileSettings } from "./TerrainTile";
 import { TextureAtlas } from "./TextureAtlas";
 import { shaders } from "./shaders";
-
-const FILE_BASE = import.meta.env.DEV ? "" : "/Threejs-Grass";
+import { FILE_BASE } from "./common";
 
 export class TerrainSection {
   private width: number;
@@ -33,7 +32,7 @@ export class TerrainSection {
     width: number,
     height: number,
     tileSettings: TerrainTileSettings,
-    dataTextures: string[]
+    tileData: string
   ) {
     this.scene = scene;
     this.width = width;
@@ -52,7 +51,7 @@ export class TerrainSection {
     this.terrainTexture.wrapS = THREE.RepeatWrapping;
     this.terrainTexture.wrapT = THREE.RepeatWrapping;
 
-    this.generateDataTexture(dataTextures);
+    this.generateDataTexture(tileData);
   }
 
   public set onLoad(handler: () => void) {
@@ -67,17 +66,19 @@ export class TerrainSection {
     this.tiles[id].visible = false;
   }
 
-  private generateDataTexture(files: string[]) {
-    this.tileData.loadAtlas(
-      "tile-data",
-      files.map((f) => FILE_BASE + f)
-    );
+  private async generateDataTexture(file: string) {
+    const res = await fetch(file);
+    const blob = await res.blob();
+    const buffer = await blob.arrayBuffer();
+    const data = new Uint8Array(buffer);
+
     this.tileData.onLoad = () => {
       this.groundMaterial = this.createGroundMaterial();
       this.grassMaterial = this.createGrassMaterial();
       this.grassGeometry = this.createGrassGeometry();
       this.generateTiles();
     };
+    this.tileData.loadAtlasFromBinary("tile-data", data, 256, 256, 64);
   }
 
   private generateTiles() {
