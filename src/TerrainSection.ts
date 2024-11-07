@@ -70,11 +70,7 @@ export class TerrainSection {
           dataTexture,
           this.tileSettings
         );
-        tile.position = new THREE.Vector3(
-          -tileSize * x * 0.98,
-          0,
-          -tileSize * y * 0.98
-        );
+        tile.position = new THREE.Vector3(-tileSize * x, 0, -tileSize * y);
         tile.id = y * this.width + x;
         this.tiles.push(tile);
         this.materials.push(...tile.materials);

@@ -24,14 +24,19 @@ void main() {
   // calculate offset
   vec2 hashedInstanceID = hash21(float(gl_InstanceID)) * 2.0 - 1.0;
   vec3 grassOffset = vec3(hashedInstanceID.x, 0.0, hashedInstanceID.y) * GRASS_PATCH_SIZE;
+  vec3 grassBladeWorldPos = grassOffset;
 
-  vec3 grassBladeWorldPos = (vec4(grassOffset, 1.0)).xyz;
-  vec3 hashVal = hash(grassBladeWorldPos);
-
+  // Get terrain data
   vec2 uv = (vec2(-grassBladeWorldPos.x, grassBladeWorldPos.z) / GRASS_PATCH_SIZE) * 0.5 + 0.5;
   vec4 tileData = texture2D(tileDataTexture, vec3(uv, u_tile_id));
   grassOffset = terrainHeight(grassOffset, tileData);
-  grassBladeWorldPos = (vec4(grassOffset, 1.0)).xyz;
+  grassBladeWorldPos = grassOffset;
+  
+
+  vec3 world_pos = (modelViewMatrix * vec4(grassBladeWorldPos, 1.0)).xyz;
+
+
+  vec3 hashVal = hash(grassBladeWorldPos);
 
   float grassType = saturate(hashVal.z);
   if (grassType < 0.5) {
@@ -72,13 +77,13 @@ void main() {
   float z = 0.0;
 
   // Wind effect
-  float windStrength = noise(vec3(grassBladeWorldPos.xz * 0.05, 0.0) + time);
+  float windStrength = noise(vec3(world_pos.xz * 0.05, 0.0) + time);
   float windAngle = 0.0;
   vec3 windAxis = vec3(cos(windAngle), 0.0, sin(windAngle));
   float windLeanAngle = windStrength * 1.25 * heightPercent * stiffness;
 
   // Bezier curve for bend
-  float randomLeanAnim = noise(vec3(grassBladeWorldPos.xz, time * 4.0)) * (windStrength * 0.5 + 0.125);
+  float randomLeanAnim = noise(vec3(world_pos.xz, time * 4.0)) * (windStrength * 0.5 + 0.125);
   float leanFactor = remap(hashVal.y, -1.0, 1.0, 0.0, 0.45) + randomLeanAnim;
 
   vec3 p1 = vec3(0.0);
@@ -97,7 +102,7 @@ void main() {
   // grass rotation
   mat3 grassMat = rotateAxis(windAxis, windLeanAngle) * rotateY(angle);
 
-  vec3 grassLocalPosition = grassMat * vec3(x, y, z) + grassOffset;
+  vec3 grassLocalPosition = grassMat * vec3(x, y, z) + grassBladeWorldPos;
   vec3 grassLocalNormal = grassMat * vec3(0.0, curveRot90 * curveGrad.yz);
 
   // blend normal
