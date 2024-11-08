@@ -4,6 +4,8 @@ import groundVertex from "./shaders/ground/vertex.glsl?raw";
 import groundFragment from "./shaders/ground/fragment.glsl?raw";
 import grassVertex from "./shaders/grass/vertex.glsl?raw";
 import grassFragment from "./shaders/grass/fragment.glsl?raw";
+import rocksVertex from "./shaders/rocks/vertex.glsl?raw";
+import rocksFragment from "./shaders/rocks/fragment.glsl?raw";
 
 import commonShader from "./shaders/common.glsl?raw";
 
@@ -19,5 +21,9 @@ export const shaders: Record<string, { vertex: string; fragment: string }> = {
   ground: {
     vertex: commonShader + groundVertex,
     fragment: commonShader + groundFragment,
+  },
+  rocks: {
+    vertex: commonShader + rocksVertex,
+    fragment: commonShader + rocksFragment,
   },
 };

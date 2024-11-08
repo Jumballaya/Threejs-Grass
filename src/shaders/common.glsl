@@ -57,6 +57,15 @@ mat3 rotateAxis(vec3 axis, float angle) {
   );
 }
 
+mat4 scale4(float x, float y, float z) {
+  return mat4(
+    x, 0, 0, 0,
+    0, y, 0, 0,
+    0, 0, z, 0,
+    0, 0, 0, 1
+  );
+}
+
 /**
  *     Randomness/Hashing/Noise
  */

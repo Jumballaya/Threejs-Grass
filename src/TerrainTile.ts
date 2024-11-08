@@ -92,7 +92,7 @@ export class TerrainTile {
     const mat = terrainMaterial.clone();
     mat.uniforms.patchSize.value = this.settings.patchSize;
     mat.uniforms.u_tile_id.value = this.terrainId;
-    const geo = new THREE.PlaneGeometry(1, 1, 128, 128);
+    const geo = new THREE.PlaneGeometry(1.05, 1.05, 128, 128);
     const terrain = new THREE.Mesh(geo, mat);
     terrain.rotateX(-Math.PI / 2);
     terrain.rotateZ(Math.PI);

@@ -1,8 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
-import { shaders } from "./shaders";
 import { TerrainSection } from "./TerrainSection";
-import { FILE_BASE } from "./common";
 import { Library } from "./Library";
 
 export class GrassApplication {
@@ -43,7 +41,9 @@ export class GrassApplication {
         256,
         64
       )
-      .then(() => {
+      .then((dataTex) => {
+        dataTex.magFilter = THREE.LinearFilter;
+        dataTex.minFilter = THREE.LinearFilter;
         const dirt = this.library.loadTexture("dirt", "/dirt1.png");
         dirt.wrapS = THREE.RepeatWrapping;
         dirt.wrapT = THREE.RepeatWrapping;
@@ -78,7 +78,7 @@ export class GrassApplication {
 
         const t1 = new TerrainSection(this.scene, this.library, 8, 8, {
           patchSize: 10,
-          grassDensity: 25,
+          grassDensity: 50,
           segments: 6,
           width: 0.125,
           height: 3,
