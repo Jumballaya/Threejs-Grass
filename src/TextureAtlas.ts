@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { save_binary } from "./common";
 
 function getImageData(image: THREE.Texture["image"]) {
   const canvas = document.createElement("canvas");
@@ -36,14 +35,14 @@ export class TextureAtlas {
     return this.textures;
   }
 
-  public loadAtlasFromImage(
-    atlas: string,
-    file: string,
-    rowCount: number,
-    colCount: number
-  ) {
-    // TODO
-  }
+  // public loadAtlasFromImage(
+  //   atlas: string,
+  //   file: string,
+  //   rowCount: number,
+  //   colCount: number
+  // ) {
+  //   // TODO
+  // }
 
   public async loadAtlasFromImages(
     atlas: string,
