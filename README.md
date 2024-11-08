@@ -7,3 +7,10 @@ This was created following the Simon Dev shader course.
 ## Demo
 
 [Try this out yourself](https://jumballaya.github.io/Threejs-Grass/)
+
+## Screenshots
+
+![](https://github.com/Jumballaya/Threejs-Grass/blob/master/.github/screenshots/grass_1.PNG?raw=true)
+![](https://github.com/Jumballaya/Threejs-Grass/blob/master/.github/screenshots/grass_2.PNG?raw=true)
+![](https://github.com/Jumballaya/Threejs-Grass/blob/master/.github/screenshots/grass_3.PNG?raw=true)
+![](https://github.com/Jumballaya/Threejs-Grass/blob/master/.github/screenshots/grass_4.PNG?raw=true)
