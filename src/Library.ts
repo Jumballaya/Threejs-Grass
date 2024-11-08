@@ -40,7 +40,7 @@ export class Library {
     h: number,
     d: number
   ) {
-    const res = await fetch(file);
+    const res = await fetch(FILE_BASE + file);
     const blob = await res.blob();
     const buffer = await blob.arrayBuffer();
     const data = new Uint8Array(buffer);
