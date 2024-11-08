@@ -54,8 +54,7 @@ export class TerrainSection {
       for (let x = 0; x < this.width; x++) {
         const tile = new TerrainTile(
           this.scene,
-          groundMaterial,
-          grassMaterial,
+          this.library,
           this.tileSettings
         );
         tile.position = new THREE.Vector3(

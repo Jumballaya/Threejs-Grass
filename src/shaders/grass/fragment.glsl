@@ -1,10 +1,10 @@
 uniform vec2 resolution;
 uniform float time;
 
-varying vec3 v_worldPosition;
-varying vec3 v_color;
-varying vec3 v_normal;
-varying vec4 v_grassData; // [x pos, height percent, xSide, - ]
+in vec3 v_worldPosition;
+in vec3 v_color;
+in vec3 v_normal;
+in vec4 v_grassData; // [x pos, height percent, xSide, - ]
 
 void main() {
   vec2 uv = v_grassData.zy;

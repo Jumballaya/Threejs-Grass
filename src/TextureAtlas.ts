@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { save_binary } from "./common";
 
 function getImageData(image: THREE.Texture["image"]) {
   const canvas = document.createElement("canvas");
@@ -44,11 +45,11 @@ export class TextureAtlas {
     // TODO
   }
 
-  public loadAtlasFromImages(
+  public async loadAtlasFromImages(
     atlas: string,
     files: string[]
-  ): THREE.DataArrayTexture {
-    const [binary, width, height] = this.getBinaryFromImages(files);
+  ): Promise<THREE.DataArrayTexture> {
+    const [binary, width, height] = await this.getBinaryFromImages(files);
     this.textures[atlas] = this.createDataArrayTexture(
       binary,
       width,
@@ -75,13 +76,15 @@ export class TextureAtlas {
     return this.textures[atlas];
   }
 
-  private getBinaryFromImages(files: string[]): [Uint8Array, number, number] {
+  private async getBinaryFromImages(
+    files: string[]
+  ): Promise<[Uint8Array, number, number]> {
     let x = -1;
     let y = -1;
     let data: Uint8Array = new Uint8Array();
 
     for (let t = 0; t < files.length; t++) {
-      const curData = this.loadType(files[t]);
+      const curData = await this.loadType(files[t]);
       const h = curData.height;
       const w = curData.width;
 
@@ -101,9 +104,9 @@ export class TextureAtlas {
     return [data, x, y];
   }
 
-  private loadType(t: string | ImageData): ImageData {
+  private async loadType(t: string | ImageData): Promise<ImageData> {
     if (typeof t === "string") {
-      const texture = this.loader.load(t);
+      const texture = await this.loader.loadAsync(t);
       return getImageData(texture.image);
     }
     return t;

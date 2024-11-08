@@ -1,26 +1,32 @@
 import * as THREE from "three";
-import { GrassFoliage } from "./foliage/GrassFoliage";
+import { GrassFoliage, GrassFoliageSettings } from "./foliage/GrassFoliage";
+import { RockFoliage, RockFoliageSettings } from "./foliage/RockFoliage";
+import { Library } from "./Library";
 
 export type TerrainTileSettings = {
   patchSize: number;
-  grassDensity: number; // grass blade per square meter
-  segments: number;
-  width: number;
-  height: number;
+  grassDensity: number;
+  grassSegments: number;
+  grassWidth: number;
+  grassHeight: number;
+  rockDensity: number;
+  rockScale: number;
 };
 
 export class TerrainTile {
   private settings: TerrainTileSettings = {
     patchSize: 1,
-    grassDensity: 10,
-    segments: 6,
-    width: 0.125,
-    height: 2,
+    grassDensity: 25,
+    grassSegments: 6,
+    grassWidth: 0.125,
+    grassHeight: 2,
+    rockDensity: 10,
+    rockScale: 1,
   };
 
   private foliage = {
     grass: null as GrassFoliage | null,
-    rocks: null,
+    rocks: null as RockFoliage | null,
   };
 
   private boundingSphere: THREE.Sphere;
@@ -28,26 +34,30 @@ export class TerrainTile {
   private grassMaterial: THREE.ShaderMaterial | null = null;
   private terrainMesh: THREE.Mesh | null = null;
   private terrainMaterial: THREE.ShaderMaterial | null = null;
+  private rockMaterial: THREE.ShaderMaterial | null = null;
 
   private terrainId: number = 0;
 
   constructor(
     scene: THREE.Scene,
-    terrainMaterial: THREE.ShaderMaterial,
-    grassMaterial: THREE.ShaderMaterial,
+    library: Library,
     settings?: Partial<TerrainTileSettings>
   ) {
     this.settings = Object.assign(this.settings, settings);
     const boundingRadius = 1 + this.settings.patchSize * 2;
     this.boundingSphere = new THREE.Sphere(this.position, boundingRadius);
-    this.setupGround(terrainMaterial, scene);
-    this.setupGrass(grassMaterial, scene);
+    this.setupGround(scene, library);
+    this.setupGrass(scene, library);
+    this.setupRocks(scene, library);
   }
 
   public set position(pos: THREE.Vector3) {
     this.terrainMesh?.position.set(pos.x, pos.y, pos.z);
     if (this.foliage.grass) {
       this.foliage.grass.position = pos;
+    }
+    if (this.foliage.rocks) {
+      this.foliage.rocks.position = pos;
     }
   }
 
@@ -58,6 +68,9 @@ export class TerrainTile {
     }
     if (this.terrainMaterial) {
       mats.push(this.terrainMaterial);
+    }
+    if (this.rockMaterial) {
+      mats.push(this.rockMaterial);
     }
     return mats;
   }
@@ -74,6 +87,9 @@ export class TerrainTile {
     if (this.foliage.grass) {
       this.foliage.grass.id = this.terrainId;
     }
+    if (this.foliage.rocks) {
+      this.foliage.rocks.id = this.terrainId;
+    }
   }
 
   public set visible(v: boolean) {
@@ -83,32 +99,71 @@ export class TerrainTile {
     if (this.foliage.grass) {
       this.foliage.grass.visible = v;
     }
+    if (this.foliage.rocks) {
+      this.foliage.rocks.visible = v;
+    }
   }
 
-  private setupGround(
-    terrainMaterial: THREE.ShaderMaterial,
-    scene: THREE.Scene
-  ) {
-    const mat = terrainMaterial.clone();
-    mat.uniforms.patchSize.value = this.settings.patchSize;
-    mat.uniforms.u_tile_id.value = this.terrainId;
+  private setupGround(scene: THREE.Scene, library: Library) {
+    const terrainMaterial = library.getShaderMaterial("ground");
+    if (!terrainMaterial) throw new Error("Ground shader material not loaded");
+
+    this.terrainMaterial = terrainMaterial.clone();
+    this.terrainMaterial.uniforms.patchSize.value = this.settings.patchSize;
+    this.terrainMaterial.uniforms.u_tile_id.value = this.terrainId;
     const geo = new THREE.PlaneGeometry(1.05, 1.05, 128, 128);
-    const terrain = new THREE.Mesh(geo, mat);
+    const terrain = new THREE.Mesh(geo, this.terrainMaterial);
     terrain.rotateX(-Math.PI / 2);
     terrain.rotateZ(Math.PI);
     terrain.scale.setScalar(this.settings.patchSize * 2);
     scene.add(terrain);
     this.terrainMesh = terrain;
-    this.terrainMaterial = mat;
   }
 
-  private setupGrass(grassMaterial: THREE.ShaderMaterial, scene: THREE.Scene) {
+  private setupGrass(scene: THREE.Scene, library: Library) {
+    const grassMaterial = library.getShaderMaterial("grass");
+    if (!grassMaterial) throw new Error("Grass shader material not loaded");
+    this.grassMaterial = grassMaterial.clone();
+
     this.foliage.grass = new GrassFoliage(
-      grassMaterial,
+      this.grassMaterial,
       this.boundingSphere,
       this.terrainId,
-      this.settings
+      this.grassSettings()
     );
     scene.add(this.foliage.grass.getMesh());
+  }
+
+  private setupRocks(scene: THREE.Scene, library: Library) {
+    const rockMaterial = library.getShaderMaterial("rocks");
+    if (!rockMaterial) throw new Error("Rock shader material not loaded");
+    this.rockMaterial = rockMaterial.clone();
+
+    this.foliage.rocks = new RockFoliage(
+      this.rockMaterial,
+      this.boundingSphere,
+      library,
+      this.terrainId,
+      this.rockSettings()
+    );
+    scene.add(this.foliage.rocks.getMesh());
+  }
+
+  private grassSettings(): GrassFoliageSettings {
+    return {
+      patchSize: this.settings.patchSize,
+      grassDensity: this.settings.grassDensity,
+      segments: this.settings.grassSegments,
+      width: this.settings.grassWidth,
+      height: this.settings.grassHeight,
+    };
+  }
+
+  private rockSettings(): RockFoliageSettings {
+    return {
+      patchSize: this.settings.patchSize,
+      rockDensity: this.settings.rockDensity,
+      scale: this.settings.rockScale,
+    };
   }
 }

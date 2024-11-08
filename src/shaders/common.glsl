@@ -2,6 +2,8 @@
  *     MATH
  */
 
+const float PI = 3.141596;
+
 float inverseLerp(float v, float minValue, float maxValue) {
   return (v - minValue) / (maxValue - minValue);
 }
@@ -57,12 +59,11 @@ mat3 rotateAxis(vec3 axis, float angle) {
   );
 }
 
-mat4 scale4(float x, float y, float z) {
-  return mat4(
-    x, 0, 0, 0,
-    0, y, 0, 0,
-    0, 0, z, 0,
-    0, 0, 0, 1
+mat3 scale3(float x, float y, float z) {
+  return mat3(
+    x, 0, 0,
+    0, y, 0,
+    0, 0, z
   );
 }
 

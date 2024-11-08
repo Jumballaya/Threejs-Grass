@@ -4,10 +4,10 @@ uniform float u_tile_id;
 uniform float time;
 uniform sampler2DArray tileDataTexture;
 
-varying vec3 v_color;
-varying vec4 v_grassData;
-varying vec3 v_normal;
-varying vec3 v_worldPosition;
+out vec3 v_color;
+out vec4 v_grassData; // [x, heightPercent, xSide, -]
+out vec3 v_normal;
+out vec3 v_worldPosition;
 
 
 const vec3 BASE_COLOR = vec3(0.1, 0.4, 0.04);
@@ -31,7 +31,6 @@ void main() {
   vec3 hashVal = hash(grassBladeWorldPos);
 
   // Grass Rotation
-  const float PI = 3.141596;
   float angle = remap(hashVal.x, -1.0, 1.0, -PI, PI);
 
   // Grass Data

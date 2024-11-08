@@ -8,6 +8,9 @@ export class Library {
   private arrayTextures: Map<string, THREE.DataArrayTexture> = new Map();
   private shaderMaterials: Map<string, THREE.ShaderMaterial> = new Map();
 
+  private instancedGeometry: Map<string, THREE.InstancedBufferGeometry> =
+    new Map();
+
   private textureLoader: THREE.TextureLoader;
   private textureAtlas: TextureAtlas;
 
@@ -46,10 +49,10 @@ export class Library {
     return tex;
   }
 
-  public loadArrayTextureFromImages(name: string, files: string[]) {
-    const tex = this.textureAtlas.loadAtlasFromImages(
+  public async loadArrayTextureFromImages(name: string, files: string[]) {
+    const tex = await this.textureAtlas.loadAtlasFromImages(
       name,
-      files.map((_, f) => FILE_BASE + f)
+      files.map((f) => FILE_BASE + f)
     );
     this.arrayTextures.set(name, tex);
     return tex;
@@ -71,5 +74,18 @@ export class Library {
 
   public getShaderMaterial(name: string): THREE.ShaderMaterial | null {
     return this.shaderMaterials.get(name) ?? null;
+  }
+
+  public loadInstancedGeometry(
+    name: string,
+    geo: THREE.InstancedBufferGeometry
+  ) {
+    this.instancedGeometry.set(name, geo);
+  }
+
+  public getInstancedGeometry(
+    name: string
+  ): THREE.InstancedBufferGeometry | null {
+    return this.instancedGeometry.get(name) ?? null;
   }
 }

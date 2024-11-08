@@ -30,7 +30,7 @@ export class GrassFoliage {
     settings = DEFAULT_SETTINGS
   ) {
     this.settings = settings;
-    this.material = material.clone();
+    this.material = material;
     this.geometry = this.createGeometry();
     this.geometry.boundingSphere = boundingSphere;
     this.mesh = new THREE.Mesh(this.geometry, this.material);
